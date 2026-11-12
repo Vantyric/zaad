@@ -67,5 +67,5 @@ This patch keeps the same five product capabilities and the version-1 backup for
 - Mobile results are browser emulation, not a physical Android/iPhone device test.
 - CSS zoom exercises a constrained enlarged layout; native browser/OS text scaling was not manually audited.
 - Firefox, Safari, screen readers, Lighthouse and concurrent multi-device edits were not tested. Automated axe scans do not establish complete WCAG conformance.
-- No external hosting was deployed. Data remains browser-local with last-write-wins between same-origin tabs.
+- The user has now authorized public website publication. Deployment and live checks are separate from local test success and are reported with the actual deployment result. Data remains browser-local with last-write-wins between same-origin tabs.
 - The repository includes a real GitHub Actions workflow. Remote CI status is reported separately after the initial push and is visible in GitHub Actions.

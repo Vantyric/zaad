@@ -2,6 +2,8 @@
 
 **A calmer kitchen starts with knowing what you have.**
 
+[Open the public website](https://zaad-pantry-vantyric.marvelouscatfish1.chatgpt.site/) · [Source on GitHub](https://github.com/Vantyric/zaad)
+
 Zaad is an Arabic, right-to-left pantry companion for households and shared kitchens. Keep track of ingredients, prioritize upcoming label dates, record what you use, and shop for what you actually need. Everything stays in your browser.
 
 ![Zaad pantry on desktop, with explicitly loaded fictional demo ingredients](docs/screenshots/desktop-pantry.png)
@@ -130,7 +132,13 @@ See [SECURITY.md](SECURITY.md) for the security model and reporting guidance.
 
 Zaad builds to `dist/` and can run on any static host. HTTPS is recommended. If publishing under a subdirectory, set Vite's `base` and update the favicon path accordingly. Configure security headers at your host; the included HTML Content Security Policy restricts resources to the same origin, with the local WebSocket exception needed for Vite development. Prefer a production HTTP CSP header without that development WebSocket exception and without `unsafe-inline` for styles if your host supports it. Set `frame-ancestors 'none'` as an HTTP header to prevent embedding.
 
-No external hosting is provisioned by this repository. GitHub source publication and website deployment are separate actions.
+The public website is published through Sites at [https://zaad-pantry-vantyric.marvelouscatfish1.chatgpt.site/](https://zaad-pantry-vantyric.marvelouscatfish1.chatgpt.site/). The tracked `.openai/hosting.json` identifies this Site and declares `dist/` as its static output. Use the same Site ID for updates; do not create a second Site for this checkout. Publishing a new live version uses the Sites source/build/package and deployment workflow. A push to GitHub updates source code; it does not automatically deploy a new Site version.
+
+The site is public without an application account. Each visitor starts with an empty, private browser-local inventory. Localhost records are not uploaded or automatically transferred; export and restore a JSON backup to move your own records to the new origin.
+
+### Search visibility
+
+The production page includes a canonical URL, Arabic description, Open Graph metadata, an indexable robots directive, `robots.txt` and a one-page `sitemap.xml`. Hash-based inventory screens are not separate sitemap entries. These files make the public website discoverable; they do not establish that Google has indexed it. Google Search Console ownership verification and an indexing request are separate owner actions. [Google's indexing guidance](https://developers.google.com/search/docs/crawling-indexing/ask-google-to-recrawl) explains that requests do not guarantee immediate inclusion.
 
 ## Contributing
 
