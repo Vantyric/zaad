@@ -1,38 +1,32 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   ArrowLeft,
   ArrowUpLeft,
-  Check,
-  CheckCheck,
   Clock3,
   Download,
   Heart,
   History,
   Info,
   Leaf,
-  LoaderCircle,
   PackageOpen,
-  Pencil,
-  Plus,
-  Printer,
-  RotateCcw,
   ShieldCheck,
   ShoppingBasket,
   SlidersHorizontal,
   Sparkles,
   Sprout,
-  Trash2,
-  Upload,
-  X,
 } from 'lucide-react'
 import { BrandMark } from './components/Art'
 import { ConsumeForm, ItemForm, ShoppingForm } from './components/Forms'
 import { ConfirmModal, Modal } from './components/Modal'
 import { Hero, Pantry } from './components/Pantry'
+import { ShoppingPage } from './pages/ShoppingPage'
+import { ActivityPage } from './pages/ActivityPage'
+import { DataPage } from './pages/DataPage'
+import { Notice } from './components/Notice'
+import type { Page, Dialog } from './lib/ui'
 import {
   demoData,
   emptyData,
-  formatDate,
   formatNumber,
   localDate,
   MAX_BACKUP_BYTES,
@@ -41,23 +35,11 @@ import {
   statusOf,
   STORAGE_KEY,
   type Action,
-  type Data,
   type Filters,
   type Item,
-  type ShoppingItem,
 } from './lib/model'
 import { downloadJson, loadData, saveData } from './lib/storage'
 
-type Page = 'pantry' | 'priority' | 'shopping' | 'activity' | 'data'
-type Dialog =
-  | { type: 'item'; item?: Item }
-  | { type: 'consume'; item: Item }
-  | { type: 'delete'; item: Item }
-  | { type: 'shopping'; item: ShoppingItem }
-  | { type: 'import'; data: Data }
-  | { type: 'reset' }
-  | { type: 'clearChecked' }
-  | null
 const defaults: Filters = {
   query: '',
   category: 'all',
@@ -84,10 +66,10 @@ export default function App() {
   const [filters, setFilters] = useState<Filters>(defaults)
   const [dialog, setDialog] = useState<Dialog>(null)
   const [notice, setNotice] = useState<{ text: string; error: boolean } | null>(null)
+  const closeNotice = useCallback(() => setNotice(null), [])
   const [importing, setImporting] = useState(false)
   const [today, setToday] = useState(localDate)
   const headingRef = useRef<HTMLHeadingElement>(null)
-  const fileRef = useRef<HTMLInputElement>(null)
   const { data, error: storageError, corrupt } = stored
   const currentPage = corrupt ? 'data' : page
   const soon = data.items.filter((item) => statusOf(item, today) === 'soon').length
@@ -169,7 +151,6 @@ export default function App() {
       })
     } finally {
       setImporting(false)
-      if (fileRef.current) fileRef.current.value = ''
     }
   }
   const itemCallbacks = {
@@ -248,7 +229,7 @@ export default function App() {
             <span>{storageError ? 'تحقق من الحفظ' : 'بياناتك تبقى عندك'}</span>
             <ArrowUpLeft size={15} />
           </button>
-          <span className="version-label">صُنع بعناية، لمائدة أفضل · 1.0</span>
+          <span className="version-label">صُنع بعناية، لمائدة أفضل · 1.0.1</span>
         </div>
       </aside>
       <main id="main-content" className="main-content" tabIndex={-1}>
@@ -371,301 +352,20 @@ export default function App() {
           />
         )}
         {currentPage === 'shopping' && (
-          <section className="shopping-section" aria-labelledby="shopping-title">
-            <div className="section-heading">
-              <div>
-                <span className="eyebrow">تسوّق على قدر حاجتك</span>
-                <h2 id="shopping-title">قائمة مرتّبة، مشوار أخف</h2>
-              </div>
-              <button
-                className="button secondary print-button"
-                onClick={() => window.print()}
-                disabled={!data.shopping.length}
-              >
-                <Printer size={18} />
-                طباعة القائمة
-              </button>
-            </div>
-            <p className="section-description">
-              دوّن الناقص، وعلّم ما اشتريته. الشراء لا يضيف المادة للمخزن تلقائياً؛ أضفها مع تاريخها
-              الجديد.
-            </p>
-            <ShoppingForm
-              onSave={(input, id) =>
-                commit({ type: 'saveShopping', input, id }, 'تم حفظ المادة في قائمة التسوق.')
-              }
-            />
-            <div className="shopping-summary">
-              <span>
-                <strong>{shoppingLeft}</strong> متبقية للشراء <span className="summary-dot">·</span>{' '}
-                <strong>{checkedCount}</strong> تم شراؤها
-              </span>
-              {checkedCount > 0 && (
-                <button
-                  className="text-button muted-button"
-                  onClick={() => setDialog({ type: 'clearChecked' })}
-                >
-                  <CheckCheck size={17} />
-                  مسح المشتريات المكتملة
-                </button>
-              )}
-            </div>
-            {data.shopping.length ? (
-              <ul className="shopping-list">
-                {[...data.shopping]
-                  .sort((a, b) => Number(a.checked) - Number(b.checked))
-                  .map((item) => (
-                    <li
-                      key={item.id}
-                      className={item.checked ? 'shopping-row checked' : 'shopping-row'}
-                    >
-                      <label className="shopping-check">
-                        <input
-                          type="checkbox"
-                          checked={item.checked}
-                          onChange={() =>
-                            commit(
-                              { type: 'toggleShopping', id: item.id },
-                              item.checked
-                                ? 'أُعيدت المادة إلى قائمة الشراء.'
-                                : 'تم تعليم المادة كمشتراة.',
-                            )
-                          }
-                        />
-                        <span className="custom-check" aria-hidden="true">
-                          <Check size={16} />
-                        </span>
-                        <span>
-                          {item.name}
-                          <small>
-                            {formatNumber(item.quantity)} {item.unit}
-                          </small>
-                        </span>
-                      </label>
-                      <div className="row-actions">
-                        <button
-                          className="icon-button"
-                          aria-label={`تعديل شراء ${item.name}`}
-                          onClick={() => setDialog({ type: 'shopping', item })}
-                        >
-                          <Pencil size={17} />
-                        </button>
-                        <button
-                          className="icon-button delete-button"
-                          aria-label={`حذف شراء ${item.name}`}
-                          onClick={() =>
-                            commit(
-                              { type: 'deleteShopping', id: item.id },
-                              'حُذفت المادة من قائمة التسوق.',
-                            )
-                          }
-                        >
-                          <Trash2 size={17} />
-                        </button>
-                      </div>
-                    </li>
-                  ))}
-              </ul>
-            ) : (
-              <div className="empty-state compact">
-                <div className="empty-illustration">
-                  <ShoppingBasket size={36} />
-                </div>
-                <h3>مشوارك القادم يبدأ هنا</h3>
-                <p>
-                  أضف ما ينقصك من النموذج أعلاه.
-                  <br />
-                  المواد المتكررة بنفس الوحدة تُجمع تلقائياً.
-                </p>
-              </div>
-            )}
-            <div className="shopping-tip">
-              <Sprout size={22} />
-              <p>
-                <strong>قبل ما تطلع للسوق…</strong> نظرة على المخزن قد تختصر عليك القائمة.
-              </p>
-              <button className="text-button" onClick={() => go('pantry')}>
-                افتح المخزن <ArrowLeft size={17} />
-              </button>
-            </div>
-          </section>
+          <ShoppingPage data={data} onCommit={commit} onDialog={setDialog} onNavigate={go} />
         )}
         {currentPage === 'activity' && (
-          <section aria-labelledby="activity-title">
-            <div className="section-heading">
-              <div>
-                <span className="eyebrow">حكاية الموجود في بيتك</span>
-                <h2 id="activity-title">كل استخدام، خطوة أحسن</h2>
-              </div>
-              <span className="section-count">
-                آخر {formatNumber(data.activity.length)} عملية · حتى 500
-              </span>
-            </div>
-            <p className="section-description">
-              سجل حقيقي لما استخدمته أو تخلّصت منه. تبقى العمليات هنا حتى لو حذفت المادة من مخزنك.
-            </p>
-            {data.activity.length ? (
-              <ul className="activity-list">
-                {data.activity.map((event) => (
-                  <li key={event.id} className="activity-row">
-                    <span className={`activity-icon ${event.kind}`}>
-                      {event.kind === 'used' ? <Leaf size={21} /> : <Trash2 size={20} />}
-                    </span>
-                    <div className="activity-description">
-                      <strong>{event.name}</strong>
-                      <span>
-                        {event.kind === 'used' ? 'استخدمت' : 'تخلّصت من'}{' '}
-                        {formatNumber(event.quantity)} {event.unit}
-                      </span>
-                    </div>
-                    <time dateTime={event.at}>
-                      {formatDate(localDate(new Date(event.at)))}
-                      <small>
-                        {new Intl.DateTimeFormat('ar-IQ', {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                          numberingSystem: 'latn',
-                        }).format(new Date(event.at))}
-                      </small>
-                    </time>
-                    <button
-                      className="icon-button"
-                      aria-label={`إضافة ${event.name} للتسوق`}
-                      title="إضافة للتسوق"
-                      onClick={() =>
-                        commit(
-                          {
-                            type: 'saveShopping',
-                            input: { name: event.name, quantity: 1, unit: event.unit },
-                          },
-                          'أُضيفت المادة للتسوق بكمية 1.',
-                        )
-                      }
-                    >
-                      <Plus size={18} />
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <div className="empty-state">
-                <div className="empty-illustration">
-                  <History size={36} />
-                </div>
-                <h3>لسّه ماكو استخدامات مسجّلة</h3>
-                <p>
-                  اضغط «سجّل الاستخدام» على أي مادة في مخزنك.
-                  <br />
-                  ستظهر الكمية والتاريخ هنا.
-                </p>
-                <button className="button primary" onClick={() => go('pantry')}>
-                  افتح المخزن <ArrowLeft size={17} />
-                </button>
-              </div>
-            )}
-          </section>
+          <ActivityPage data={data} onCommit={commit} onNavigate={go} />
         )}
         {currentPage === 'data' && (
-          <section className="data-section" aria-labelledby="data-title">
-            <div className="privacy-hero">
-              <span className="privacy-emblem">
-                <ShieldCheck size={34} />
-              </span>
-              <div>
-                <span className="eyebrow">بيتك له خصوصيته</span>
-                <h2 id="data-title">بياناتك عندك. القرار إلك.</h2>
-                <p>
-                  زاد يحفظ مخزنك في هذا المتصفح فقط. بلا تسجيل دخول، بلا تتبّع، وبلا إرسال بيانات
-                  لخادم.
-                </p>
-              </div>
-            </div>
-            {corrupt && (
-              <div className="recovery-card">
-                <Info size={24} />
-                <div>
-                  <h3>بيانات محفوظة تحتاج مراجعة</h3>
-                  <p>حافظنا على الأصل ولم نستبدله. نزّل الملف قبل استعادة نسخة أو البدء من جديد.</p>
-                  <button
-                    className="button secondary"
-                    onClick={() => downloadJson(stored.raw || '', `zaad-recovery-${today}.json`)}
-                  >
-                    <Download size={17} />
-                    تنزيل البيانات الأصلية
-                  </button>
-                </div>
-              </div>
-            )}
-            <div className="data-grid">
-              <article className="data-card">
-                <span className="data-icon">
-                  <Download size={24} />
-                </span>
-                <h3>نسخة تطمّن بالك</h3>
-                <p>نزّل ملف JSON فيه مخزنك وقائمة تسوقك وسجلّك. تقدر تستعيده في متصفح آخر.</p>
-                <button className="button primary" onClick={backup} disabled={corrupt}>
-                  <Download size={17} />
-                  تنزيل نسخة احتياطية
-                </button>
-              </article>
-              <article className="data-card">
-                <span className="data-icon apricot">
-                  <Upload size={24} />
-                </span>
-                <h3>ارجع لمخزنك</h3>
-                <p>اختر نسخة من زاد. سنفحصها ونعرض محتواها بالأرقام قبل استبدال بياناتك الحالية.</p>
-                <input
-                  ref={fileRef}
-                  type="file"
-                  accept=".json,application/json"
-                  aria-label="اختيار نسخة احتياطية"
-                  className="visually-hidden"
-                  onChange={(event) => void importFile(event.target.files?.[0])}
-                />
-                <button
-                  className="button secondary"
-                  disabled={importing}
-                  onClick={() => fileRef.current?.click()}
-                >
-                  {importing ? <LoaderCircle size={17} className="spin" /> : <Upload size={17} />}
-                  {importing ? 'جاري فحص النسخة…' : 'استعادة من ملف'}
-                </button>
-                <span className="field-hint">JSON فقط · حتى 1 ميغابايت · 500 سجل لكل قائمة</span>
-              </article>
-            </div>
-            <div className="privacy-details">
-              <h3>
-                <Info size={20} />
-                تعرف على طريقة الحفظ
-              </h3>
-              <ul>
-                <li>
-                  الحفظ مرتبط بالمتصفح والجهاز. مسح بيانات الموقع أو استخدام نافذة خاصة قد يفقدك
-                  البيانات.
-                </li>
-                <li>النسخ الاحتياطية تحتوي ما كتبته، بما فيه الملاحظات. احتفظ بها في مكان خاص.</li>
-                <li>التواريخ تذكيرات تنظيمية حسب إدخالك، وليست حكماً على صلاحية الطعام.</li>
-                <li>
-                  التغييرات في نافذة أخرى من المتصفح نفسه تظهر تلقائياً. يُفضّل التعديل من نافذة واحدة
-                  في كل مرة.
-                </li>
-                <li>الحد الأقصى 500 مادة و500 مادة تسوق؛ يحتفظ السجل بآخر 500 عملية.</li>
-              </ul>
-            </div>
-            <div className="reset-card">
-              <div>
-                <h3>بداية جديدة</h3>
-                <p>امسح المخزن وقائمة التسوق والسجل من هذا المتصفح. نزّل نسخة أولاً إذا احتجتها.</p>
-              </div>
-              <button
-                className="button danger-outline"
-                onClick={() => setDialog({ type: 'reset' })}
-              >
-                <RotateCcw size={17} />
-                مسح كل البيانات
-              </button>
-            </div>
-          </section>
+          <DataPage
+            stored={stored}
+            today={today}
+            importing={importing}
+            onBackup={backup}
+            onImport={importFile}
+            onReset={() => setDialog({ type: 'reset' })}
+          />
         )}
         <footer className="app-footer">
           <span>
@@ -677,22 +377,7 @@ export default function App() {
           </span>
         </footer>
       </main>
-      {notice && (
-        <div
-          className={notice.error ? 'toast error-toast' : 'toast'}
-          role={notice.error ? 'alert' : 'status'}
-        >
-          {notice.error ? <Info size={19} /> : <Check size={19} />}
-          <span>{notice.text}</span>
-          <button
-            className="icon-button"
-            aria-label="إغلاق الإشعار"
-            onClick={() => setNotice(null)}
-          >
-            <X size={17} />
-          </button>
-        </div>
-      )}
+      {notice && <Notice notice={notice} onClose={closeNotice} />}
       {dialog?.type === 'item' && (
         <ItemForm
           item={dialog.item}

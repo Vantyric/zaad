@@ -116,6 +116,9 @@ test('scenario 3: export, reject malformed import, preview/cancel and restore ba
   const path = await download.path()
   const backup = JSON.parse(await readFile(path!, 'utf8'))
   expect(backup.items[0].name).toBe('أرز بسمتي')
+  await page.getByRole('button', { name: 'تنزيل نسخة احتياطية', exact: true }).focus()
+  await page.keyboard.press('Tab')
+  await expect(page.getByRole('button', { name: 'استعادة من ملف', exact: true })).toBeFocused()
   const upload = page.getByLabel('اختيار نسخة احتياطية')
   await upload.setInputFiles({
     name: 'bad.json',
@@ -154,10 +157,12 @@ test('keyboard validation, modal focus containment and Escape return focus', asy
   await expect(modal.getByRole('textbox', { name: /اسم المادة/ })).toBeFocused()
   await modal.getByRole('button', { name: 'إضافة للمخزن' }).click()
   await expect(modal.getByRole('alert')).toContainText('راجع الحقول')
+  await expect(modal.getByRole('textbox', { name: /اسم المادة/ })).toBeFocused()
   await modal.getByRole('textbox', { name: /اسم المادة/ }).fill('اختبار')
   await modal.getByRole('spinbutton').fill('-1')
   await modal.getByRole('button', { name: 'إضافة للمخزن' }).click()
   await expect(modal.getByText(/أدخل كمية أكبر/)).toBeVisible()
+  await expect(modal.getByRole('spinbutton')).toBeFocused()
   await modal.getByRole('button', { name: 'إلغاء', exact: true }).focus()
   await page.keyboard.press('Tab')
   expect(
@@ -338,4 +343,56 @@ test('accessibility and real product screenshots across all screens and editor',
   )
   await page.screenshot({ path: `docs/screenshots/${prefix}-editor.png`, fullPage: true })
   expect(violations, JSON.stringify(violations, null, 2)).toEqual([])
+})
+
+test('long ingredient text and large quantities remain usable at every breakpoint', async ({
+  page,
+}) => {
+  const name = 'PantryItem'.repeat(8)
+  await addItem(page, name, '99999.999')
+  const card = page.getByRole('article', { name, exact: true })
+  await card.getByRole('button', { name: `تعديل ${name}`, exact: true }).click()
+  await page
+    .getByRole('dialog')
+    .getByRole('textbox', { name: /ملاحظة/ })
+    .fill('ملاحظة طويلة للتأكد من القراءة والمحاذاة. '.repeat(7))
+  await page.getByRole('button', { name: 'حفظ التعديلات' }).click()
+  for (const width of [1440, 768, 390, 320]) {
+    await page.setViewportSize({ width, height: 844 })
+    await noOverflow(page)
+    await expect(card.getByRole('heading')).toHaveText(name)
+    expect(await card.evaluate((element) => element.scrollWidth <= element.clientWidth + 1)).toBe(
+      true,
+    )
+  }
+  const edit = card.getByRole('button', { name: `تعديل ${name}`, exact: true })
+  await edit.scrollIntoViewIfNeeded()
+  const target = await edit.boundingBox()
+  expect(target!.height).toBeGreaterThanOrEqual(44)
+  expect(target!.width).toBeGreaterThanOrEqual(44)
+  await expect(page.getByRole('navigation')).toBeInViewport()
+})
+
+test('success feedback pauses while read, then clears; errors stay visible', async ({ page }) => {
+  await page.clock.install()
+  await addItem(page)
+  const toast = page.locator('.toast')
+  await toast.hover()
+  await page.clock.fastForward(9000)
+  await expect(toast).toBeVisible()
+  await page.mouse.move(0, 0)
+  await page.clock.runFor(50)
+  await page.clock.fastForward(8500)
+  await expect(toast).not.toBeVisible()
+  await nav(page, 'data')
+  await page.getByLabel('اختيار نسخة احتياطية').setInputFiles({
+    name: 'bad.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from('{broken'),
+  })
+  await expect(page.getByRole('alert')).toContainText('تعذّرت قراءة الملف')
+  await page.clock.fastForward(30000)
+  await expect(page.getByRole('alert')).toBeVisible()
+  await page.getByRole('button', { name: 'إغلاق الإشعار' }).click()
+  await expect(page.getByRole('alert')).not.toBeVisible()
 })

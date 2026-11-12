@@ -24,6 +24,8 @@ First launch is empty. Fictional sample ingredients appear only after choosing *
 
 ## Design
 
+Version **1.0.1** refines the existing experience with larger text and inputs, more comfortable mobile targets, long-text reflow and a compact populated-pantry introduction. The feature scope and backup format remain unchanged.
+
 An original forest-green and warm-ivory visual system, self-hosted **Noto Sans Arabic**, restrained citrus accents, custom SVG food illustrations and Lucide icons. The layout adapts from a right-hand desktop navigation rail and three-column pantry to compact mobile navigation and single-column cards.
 
 Keyboard support includes a skip link, labelled controls, visible focus, modal focus containment, Escape-to-close and return focus. Statuses use text as well as color, and transitions respect reduced-motion preferences. Automated accessibility and responsive checks are documented in [QA results](docs/QA.md); they do not replace a full assistive-technology audit.
@@ -97,7 +99,8 @@ CI uses the lockfile and Node 24, runs lint, type checks, formatting, unit tests
 ```text
 src/
   App.tsx               # Navigation, UI orchestration and persistence feedback
-  components/           # Pantry, editors, native dialogs, original art, error boundary
+  components/           # Pantry, editors, dialogs, notices, original art, error boundary
+  pages/                # Shopping, activity and data/privacy screens
   lib/model.ts          # Validated domain model, date/search helpers and immutable actions
   lib/storage.ts        # Persistence, recovery and export
   lib/*.test.ts         # Domain and storage tests

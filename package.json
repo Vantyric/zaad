@@ -1,7 +1,7 @@
 {
   "name": "zaad-pantry",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "description": "An Arabic, privacy-first pantry companion that helps households use what they have.",
   "license": "MIT",

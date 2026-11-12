@@ -21,6 +21,11 @@ const fieldMessages: Record<string, string> = {
   notes: 'الملاحظات حتى 300 حرف.',
 }
 
+function focusField(form: HTMLFormElement, name: string) {
+  const field = form.elements.namedItem(name)
+  if (field instanceof HTMLElement) field.focus()
+}
+
 export function ItemForm({
   item,
   onSave,
@@ -52,6 +57,7 @@ export function ItemForm({
           ]),
         ),
       )
+      focusField(event.currentTarget, String(result.error.issues[0].path[0]))
       return
     }
     if (onSave(result.data, item?.id)) onClose()
@@ -203,6 +209,7 @@ export function ConsumeForm({
       !itemInputSchema.shape.quantity.safeParse(quantity).success
     ) {
       setError('أدخل كمية صحيحة لا تتجاوز الموجود، حتى ثلاث منازل عشرية.')
+      event.currentTarget.querySelector<HTMLInputElement>('input[type=number]')?.focus()
       return
     }
     if (onConsume(quantity, kind, toShopping)) onClose()
@@ -308,6 +315,7 @@ export function ShoppingForm({
     })
     if (!result.success) {
       setError('اكتب اسماً حتى 80 حرفاً وكمية أكبر من صفر وحتى 100000، بثلاث منازل عشرية كحد أقصى.')
+      focusField(form, String(result.error.issues[0].path[0]))
       return
     }
     if (onSave(result.data, item?.id)) {

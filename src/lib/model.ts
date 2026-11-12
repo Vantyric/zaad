@@ -148,19 +148,23 @@ function dayCount(days: number): string {
   return days === 1 ? 'يوم واحد' : days === 2 ? 'يومين' : `${days} ${days <= 10 ? 'أيام' : 'يوماً'}`
 }
 
+const dateFormatter = new Intl.DateTimeFormat('ar-IQ', {
+  day: 'numeric',
+  month: 'short',
+  numberingSystem: 'latn',
+})
+const numberFormatter = new Intl.NumberFormat('ar-IQ', {
+  maximumFractionDigits: 3,
+  numberingSystem: 'latn',
+})
+const nameCollator = new Intl.Collator('ar')
+
 export function formatDate(date: string): string {
-  return new Intl.DateTimeFormat('ar-IQ', {
-    day: 'numeric',
-    month: 'short',
-    numberingSystem: 'latn',
-  }).format(new Date(`${date}T12:00:00`))
+  return dateFormatter.format(new Date(`${date}T12:00:00`))
 }
 
 export function formatNumber(value: number): string {
-  return new Intl.NumberFormat('ar-IQ', {
-    maximumFractionDigits: 3,
-    numberingSystem: 'latn',
-  }).format(value)
+  return numberFormatter.format(value)
 }
 
 export type Filters = {
@@ -181,10 +185,10 @@ export function filterItems(items: Item[], filters: Filters, today = localDate()
         (filters.status === 'all' || statusOf(item, today) === filters.status),
     )
     .sort((a, b) => {
-      if (filters.sort === 'name') return a.name.localeCompare(b.name, 'ar')
+      if (filters.sort === 'name') return nameCollator.compare(a.name, b.name)
       if (filters.sort === 'newest') return b.createdAt.localeCompare(a.createdAt)
       return (
-        (a.date || '9999').localeCompare(b.date || '9999') || a.name.localeCompare(b.name, 'ar')
+        (a.date || '9999').localeCompare(b.date || '9999') || nameCollator.compare(a.name, b.name)
       )
     })
 }

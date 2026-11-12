@@ -54,3 +54,7 @@ No external hosting deployment is authorized. Public GitHub publication of this 
 ## Deferred
 
 Cross-device sharing/authentication, barcode recognition, recipe recommendations and push notifications. No placeholder controls for these features are shipped.
+
+## 1.0.1 quality refinement
+
+The user requested improving the current product without new features. This pass preserves the five capabilities and local data format, and focuses on readable type, compact populated-pantry presentation, mobile navigation/touch targets, long-text reflow, validation focus, unobtrusive success feedback and smaller screen modules.

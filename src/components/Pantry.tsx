@@ -39,7 +39,7 @@ export function Hero({
   hasItems: boolean
 }) {
   return (
-    <section className="hero" aria-labelledby="hero-title">
+    <section className={hasItems ? 'hero populated' : 'hero'} aria-labelledby="hero-title">
       <div className="hero-copy">
         <span className="hero-label">
           <span />
