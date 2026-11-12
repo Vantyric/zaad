@@ -20,7 +20,7 @@ Validation performed on **12 November 2026**. This document records commands and
 | `npm run format:check` | Passed                                                                                                                     |
 | `npm test`             | **61 passed**, 2 files                                                                                                     |
 | `npm run build`        | Passed; static production output in `dist/`                                                                                |
-| `npm run test:e2e`     | **26 passed** across desktop and mobile Chromium; final run 15.5s                                                          |
+| `npm run test:e2e`     | **26 passed** across desktop and mobile Chromium; Pages-path run 15.7s                                                     |
 | `npm audit`            | **0 known vulnerabilities**, including development dependencies                                                            |
 | `npm audit --omit=dev` | **0 known vulnerabilities** in production dependencies                                                                     |
 | axe-core scans         | **0 detected violations** for WCAG 2 A/AA and WCAG 2.1 AA rules on five screens plus the editor, in both viewport projects |
@@ -61,6 +61,12 @@ This patch keeps the same five product capabilities and the version-1 backup for
 - Maintainability: shopping, activity and data screens are separated under `src/pages/`; shared view types live in `src/lib/ui.ts`; repeated number, date and name-collation formatters are reused. The main application file fell from 829 to 514 lines without changing record storage.
 - Regression verification: all original 22 browser cases still passed. Four additional desktop/mobile cases cover maximum-length unbroken names, large fractional quantities, long notes, touch-target size and notification timing. Existing keyboard and backup scenarios now also check invalid-field focus and the import-button tab order.
 - Screenshots were recaptured from the production build with the same synthetic data workflow. The UI was also reviewed in the in-app browser.
+
+## Public GitHub Pages preparation
+
+The complete browser suite was rerun with `VITE_BASE_PATH=/zaad/`, matching the public repository path. All **26 tests passed** in **15.7s**. Lint, TypeScript, formatting and all **61 unit tests** also passed after the hosting changes. The production HTML resolves its JavaScript, stylesheet and favicon under `/zaad/`; the canonical, Open Graph and sitemap URLs point to `https://vantyric.github.io/zaad/`. Fonts and icons remain bundled locally. The current source no longer contains the previous hosting provider's configuration.
+
+The main-branch workflow now publishes the tested build to GitHub Pages after the quality job passes. Live deployment and anonymous URL verification are reported separately once completed.
 
 ## Verification limits
 

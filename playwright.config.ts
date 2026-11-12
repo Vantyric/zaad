@@ -1,5 +1,7 @@
 import { defineConfig } from '@playwright/test'
 
+const appPath = process.env.VITE_BASE_PATH || '/'
+
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
@@ -33,7 +35,7 @@ export default defineConfig({
   ],
   webServer: {
     command: 'npm run build && npm run preview -- --port 4173 --strictPort',
-    url: 'http://127.0.0.1:4173',
+    url: `http://127.0.0.1:4173${appPath}`,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
   },

@@ -2,7 +2,7 @@
 
 **A calmer kitchen starts with knowing what you have.**
 
-[Open the public website](https://zaad-pantry-vantyric.marvelouscatfish1.chatgpt.site/) · [Source on GitHub](https://github.com/Vantyric/zaad)
+[Open the public website](https://vantyric.github.io/zaad/) · [Source on GitHub](https://github.com/Vantyric/zaad)
 
 Zaad is an Arabic, right-to-left pantry companion for households and shared kitchens. Keep track of ingredients, prioritize upcoming label dates, record what you use, and shop for what you actually need. Everything stays in your browser.
 
@@ -85,7 +85,7 @@ npx playwright show-report
 
 Vitest covers date arithmetic, input boundaries, reducers, Arabic search, backup validation and persistence failures. Playwright exercises the three main end-to-end journeys plus security, recovery, keyboard, RTL, responsive, print and accessibility checks. It captures real screenshots in `docs/screenshots/`. Test data is synthetic and each browser test starts in an isolated context.
 
-CI uses the lockfile and Node 24, runs lint, type checks, formatting, unit tests, a production build and both browser projects. It uploads the test report and screenshots. It does **not** deploy the site. See [the workflow](.github/workflows/ci.yml) and [verified QA results](docs/QA.md).
+CI uses the lockfile and Node 24, runs lint, type checks, formatting, unit tests, a production build and both browser projects. It uploads the test report and screenshots, then deploys successful `main` builds to GitHub Pages. See [the workflow](.github/workflows/ci.yml) and [verified QA results](docs/QA.md).
 
 ## Architecture
 
@@ -132,7 +132,17 @@ See [SECURITY.md](SECURITY.md) for the security model and reporting guidance.
 
 Zaad builds to `dist/` and can run on any static host. HTTPS is recommended. If publishing under a subdirectory, set Vite's `base` and update the favicon path accordingly. Configure security headers at your host; the included HTML Content Security Policy restricts resources to the same origin, with the local WebSocket exception needed for Vite development. Prefer a production HTTP CSP header without that development WebSocket exception and without `unsafe-inline` for styles if your host supports it. Set `frame-ancestors 'none'` as an HTTP header to prevent embedding.
 
-The public website is published through Sites at [https://zaad-pantry-vantyric.marvelouscatfish1.chatgpt.site/](https://zaad-pantry-vantyric.marvelouscatfish1.chatgpt.site/). The tracked `.openai/hosting.json` identifies this Site and declares `dist/` as its static output. Use the same Site ID for updates; do not create a second Site for this checkout. Publishing a new live version uses the Sites source/build/package and deployment workflow. A push to GitHub updates source code; it does not automatically deploy a new Site version.
+The public website is hosted on **GitHub Pages** at [https://vantyric.github.io/zaad/](https://vantyric.github.io/zaad/), under the same account as this repository. The site uses Zaad's own title, icon and visual identity.
+
+The GitHub Actions workflow checks the source, runs the desktop/mobile acceptance suite against the production `/zaad/` base path, uploads `dist/`, and deploys successful `main` builds to the `github-pages` environment. Pull requests are tested without deploying. No deployment tokens or paid service configuration are required.
+
+```bash
+# Produce the GitHub Pages build locally
+npm run build:pages
+npm run preview:pages
+```
+
+For another repository path, update `VITE_BASE_PATH` in the workflow, the Pages build command, canonical/Open Graph URLs and sitemap. Development defaults to `/`, so `npm run dev` continues to work at the local root.
 
 The site is public without an application account. Each visitor starts with an empty, private browser-local inventory. Localhost records are not uploaded or automatically transferred; export and restore a JSON backup to move your own records to the new origin.
 

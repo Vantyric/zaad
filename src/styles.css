@@ -307,12 +307,6 @@ a {
   letter-spacing: -0.65px;
   margin-block-start: 1px;
 }
-.heading-spark {
-  color: #806036;
-  font-size: 21px;
-  padding-inline-start: 10px;
-  font-weight: 400;
-}
 .topbar-meta {
   display: grid;
   justify-items: end;
@@ -2144,10 +2138,6 @@ a {
   }
   .greeting {
     font-size: var(--font-caption);
-  }
-  .heading-spark {
-    font-size: 16px;
-    padding-inline-start: 7px;
   }
   .topbar-meta {
     padding-block-start: 3px;

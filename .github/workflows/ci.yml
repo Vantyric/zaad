@@ -1,4 +1,4 @@
-name: Quality checks
+name: Quality and public deployment
 
 on:
   push:
@@ -17,6 +17,8 @@ jobs:
   quality:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      VITE_BASE_PATH: /zaad/
     steps:
       - name: Check out source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -39,7 +41,7 @@ jobs:
         run: npm test
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
-      - name: Build and test desktop and mobile
+      - name: Build and test public Pages site on desktop and mobile
         run: npm run test:e2e
       - name: Save test report and real screenshots
         if: always()
@@ -50,3 +52,24 @@ jobs:
             playwright-report/
             docs/screenshots/
           retention-days: 7
+      - name: Upload public website
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: dist
+
+  deploy:
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    needs: quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy public website
+        id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1

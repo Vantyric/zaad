@@ -3,6 +3,7 @@ import AxeBuilder from '@axe-core/playwright'
 import { readFile } from 'node:fs/promises'
 
 const storageKey = 'zaad:pantry:v1'
+const appPath = process.env.VITE_BASE_PATH || '/'
 const nav = async (page: Page, route: 'pantry' | 'priority' | 'shopping' | 'activity' | 'data') => {
   const labels = {
     pantry: /^(مخزن البيت|المخزن)$/,
@@ -38,7 +39,7 @@ async function noOverflow(page: Page) {
 }
 
 test.beforeEach(async ({ page }) => {
-  await page.goto('/')
+  await page.goto(appPath)
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
 })
 
@@ -223,12 +224,12 @@ test('same-origin tabs receive updates and application assets stay local', async
   page.on('pageerror', (error) => errors.push(error.message))
   await page.reload()
   const second = await context.newPage()
-  await second.goto('/')
+  await second.goto(appPath)
   await expect(second.getByRole('heading', { level: 1 })).toBeVisible()
   await addItem(page)
   await expect(second.getByRole('article', { name: 'أرز بسمتي' })).toBeVisible()
   await expect(second.getByRole('status').last()).toContainText('نافذة أخرى')
-  expect(requests.filter((url) => !url.startsWith('http://127.0.0.1:4173/'))).toEqual([])
+  expect(requests.filter((url) => !url.startsWith(`http://127.0.0.1:4173${appPath}`))).toEqual([])
   expect(errors).toEqual([])
   await second.close()
 })

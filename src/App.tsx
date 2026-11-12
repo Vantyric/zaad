@@ -12,7 +12,6 @@ import {
   ShieldCheck,
   ShoppingBasket,
   SlidersHorizontal,
-  Sparkles,
   Sprout,
 } from 'lucide-react'
 import { BrandMark } from './components/Art'
@@ -240,7 +239,6 @@ export default function App() {
             </span>
             <h1 ref={headingRef} tabIndex={-1}>
               {currentPage === 'pantry' ? 'كل نعمة إلها مكان' : title}
-              <span className="heading-spark">✳</span>
             </h1>
           </div>
           <div className="topbar-meta">
@@ -316,7 +314,7 @@ export default function App() {
             {soon + expired > 0 && (
               <div className="priority-banner">
                 <span className="banner-icon">
-                  <Sparkles size={21} />
+                  <Clock3 size={21} />
                 </span>
                 <p>
                   <strong>لفتة لمخزنك</strong>
